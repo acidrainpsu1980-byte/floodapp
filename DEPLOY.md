@@ -23,7 +23,8 @@ This method automatically deploys your app whenever you push changes to GitHub.
     *   **Publish**: Code.
     *   **Runtime stack**: `Node 20 LTS`.
     *   **Operating System**: `Linux`.
-    *   **Region**: Southeast Asia (or nearest to you).
+    *   **Region**: **East US** (Recommended for Student Accounts).
+        > **Note**: If you see a "RequestDisallowedByAzure" error, it means your student subscription is restricted to specific regions. Try **East US**, **Central US**, or **West Europe**.
     *   **Pricing Plan**: Select `Free F1` (if available) or `Basic B1`.
 4.  Click **Review + create** -> **Create**.
 
