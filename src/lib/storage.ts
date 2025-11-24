@@ -15,7 +15,7 @@ export interface RequestData {
     status: 'pending' | 'in-progress' | 'completed';
     assignedUnit: 'Medical' | 'Water Rescue' | 'Supply' | 'General';
     priority: 'High' | 'Normal';
-    createdAt: string;
+    timestamp: string;
 }
 
 const DATA_FILE = path.join(process.cwd(), 'data.json');
@@ -32,12 +32,12 @@ export function getRequests(): RequestData[] {
     }
 }
 
-export function saveRequest(request: Omit<RequestData, 'id' | 'createdAt' | 'status'>): RequestData {
+export function saveRequest(request: Omit<RequestData, 'id' | 'timestamp' | 'status'>): RequestData {
     const requests = getRequests();
     const newRequest: RequestData = {
         ...request,
         id: Math.random().toString(36).substring(2, 9),
-        createdAt: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
         status: 'pending',
     };
 

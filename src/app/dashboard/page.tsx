@@ -45,10 +45,10 @@ export default function DashboardPage() {
 
     const updateStatus = async (id: string, newStatus: RequestData['status']) => {
         try {
-            const res = await fetch(`/api/requests/${id}`, {
-                method: "PUT",
+            const res = await fetch(`/api/requests`, {
+                method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ id, status: newStatus }),
             });
 
             if (res.ok) {
@@ -171,7 +171,7 @@ export default function DashboardPage() {
                                                 request.status === 'in-progress' ? 'กำลังดำเนินการ' : 'เสร็จสิ้น'}
                                         </span>
                                         <span className="text-xs text-[var(--text-secondary)]">
-                                            {new Date(request.createdAt).toLocaleTimeString('th-TH')}
+                                            {new Date(request.timestamp).toLocaleTimeString('th-TH')}
                                         </span>
                                     </div>
 
