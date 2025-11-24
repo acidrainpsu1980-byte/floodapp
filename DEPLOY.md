@@ -99,9 +99,44 @@ If you don't want to use GitHub, you can deploy directly from your computer.
 ### Startup Command
 Azure needs to know how to start your app.
 1.  Go to your App Service in Azure Portal.
-2.  Go to **Settings** -> **Configuration** -> **General settings**.
+2.  Go to **Settings** -> **Configuration** -> **General settings`.
 3.  **Startup Command**: `node server.js`
 4.  Click **Save**.
 
 ### Environment Variables
-If you have any secrets (like API keys), add them in **Settings** -> **Environment variables**.
+
+**IMPORTANT**: You must configure Cosmos DB credentials in Azure for the app to work.
+
+1. Go to your App Service in Azure Portal.
+2. Navigate to **Settings** → **Environment variables** → **App settings**.
+3. Click **+ Add** and add the following variables:
+
+| Name | Value | Example |
+|------|-------|---------|
+| `COSMOS_ENDPOINT` | Your Cosmos DB URI | `https://flood-relief-db.documents.azure.com:443/` |
+| `COSMOS_KEY` | Your Cosmos DB Primary Key | `3g7a5uzz19MoLJ...` (from Azure Portal → Cosmos DB → Keys) |
+| `COSMOS_DATABASE` | Database name | `FloodReliefDB` |
+| `COSMOS_CONTAINER` | Container name | `tsRequests` |
+
+4. Click **Apply** and **Confirm** to restart the app.
+
+> **Where to find Cosmos DB credentials:**
+> - Go to Azure Portal → Your Cosmos DB account → **Keys**
+> - Copy the **URI** and **PRIMARY KEY**
+> - Database and Container names are in **Data Explorer**
+
+---
+
+## Troubleshooting
+
+### Application Error
+If you see "Application Error" after deployment:
+1. Check **Log stream** (Monitoring → Log stream) for error details
+2. Verify **Startup Command** is set to `node server.js`
+3. Verify **Environment Variables** are configured correctly
+
+### Database Connection Issues
+If requests aren't saving:
+1. Verify all 4 Cosmos DB environment variables are set
+2. Check the container name matches exactly (case-sensitive)
+3. View logs in Azure Portal to see specific error messages
