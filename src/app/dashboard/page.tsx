@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Card from "@/components/Card";
 import { RequestData } from "@/lib/storage";
 import { convertToCSV } from "@/lib/csv";
+import ReportChart from '@/components/ReportChart';
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -107,6 +108,8 @@ export default function DashboardPage() {
                         >
                             📥 Export CSV
                         </Button>
+                        {/* Report Chart */}
+                        <ReportChart />
                         <div className="w-px h-8 bg-slate-300 mx-2 hidden md:block"></div>
                         <Button
                             variant={showMap ? 'primary' : 'outline'}
