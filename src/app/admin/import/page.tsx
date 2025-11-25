@@ -232,173 +232,207 @@ export default function ImportPage() {
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 p-4 md:p-6">
+        <main className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans">
             <div className="max-w-7xl mx-auto space-y-6">
-                <header className="bg-white p-4 rounded-lg shadow border border-slate-200">
-                    <h1 className="text-2xl font-bold text-slate-800">📥 นำเข้าข้อมูลจาก Facebook</h1>
-                    <p className="text-slate-500 text-sm mt-1">Copy comments จาก Facebook แล้ววางลงในช่องด้านล่าง</p>
+                <header className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            📥 นำเข้าข้อมูลจาก Facebook
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">Copy comments จาก Facebook แล้ววางลงในช่องด้านล่างเพื่อวิเคราะห์ข้อมูลอัตโนมัติ</p>
+                    </div>
+                    <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+                        ⬅️ กลับหน้า Dashboard
+                    </Button>
                 </header>
 
-                {/* Input Section - Full Width */}
-                <Card>
-                    <h2 className="text-lg font-bold mb-3">1️⃣ วาง Comments จาก Facebook ที่นี่</h2>
-                    <textarea
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        placeholder="วาง comments จาก Facebook ที่นี่...&#x0A;&#x0A;ตัวอย่าง:&#x0A;ชื่อ: สมชาย ใจดี&#x0A;เบอร์: 081-234-5678&#x0A;ที่อยู่: 123 ซอยลาดพร้าว อำเภอหาดใหญ่&#x0A;จำนวน: 5 คน&#x0A;ต้องการ: น้ำดื่ม อาหาร ด่วน!&#x0A;&#x0A;---&#x0A;&#x0A;ชื่อ: สมหญิง รักสงบ&#x0A;เบอร์: 062-987-6543&#x0A;ที่อยู่: 456 ถนนนิพัทธ์อุทิศ 3 ตำบลคูเต่า&#x0A;จำนวน: 3 คน&#x0A;ต้องการ: เรือ น้ำดื่ม ด่วนมาก!"
-                        className="w-full h-96 p-4 border rounded-lg font-mono text-sm resize-y"
-                    />
-                    <div className="mt-4 flex gap-2 flex-wrap">
-                        <Button
-                            variant="primary"
-                            onClick={handleParseWithAI}
-                            disabled={!inputText.trim() || parsing}
-                            className="bg-purple-600 hover:bg-purple-700"
-                        >
-                            {parsing ? "🤖 AI กำลังวิเคราะห์..." : "🤖 วิเคราะห์ด้วย AI (ฟรี)"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={handleParse}
-                            disabled={!inputText.trim()}
-                        >
-                            🔍 วิเคราะห์แบบปกติ
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => setInputText("")}
-                        >
-                            ล้างข้อมูล
-                        </Button>
-                        <div className="flex-1"></div>
-                        <span className="text-xs text-slate-500 self-center">
-                            {inputText.trim().split(/\n\n+/).filter(x => x.length > 10).length} comments
-                        </span>
-                    </div>
-                </Card>
-
-                {/* Preview Section - Full Width */}
-                <Card>
-                    <div className="flex justify-between items-center mb-3">
-                        <h2 className="text-lg font-bold">2️⃣ ข้อมูลที่วิเคราะห์ได้ ({parsedData.length} รายการ)</h2>
-                        {parsedData.length > 0 && (
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
-                                    📄 Download CSV
-                                </Button>
+                <div className="grid lg:grid-cols-12 gap-6">
+                    {/* Input Section - 4 Columns */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <Card className="h-full flex flex-col">
+                            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                                1️⃣ วาง Comments
+                            </h2>
+                            <textarea
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                placeholder="วาง comments จาก Facebook ที่นี่...&#x0A;&#x0A;ตัวอย่าง:&#x0A;ชื่อ: สมชาย ใจดี&#x0A;เบอร์: 081-234-5678&#x0A;ที่อยู่: 123 ซอยลาดพร้าว อำเภอหาดใหญ่&#x0A;จำนวน: 5 คน&#x0A;ต้องการ: น้ำดื่ม อาหาร ด่วน!&#x0A;&#x0A;---&#x0A;&#x0A;ชื่อ: สมหญิง รักสงบ&#x0A;เบอร์: 062-987-6543&#x0A;ที่อยู่: 456 ถนนนิพัทธ์อุทิศ 3 ตำบลคูเต่า&#x0A;จำนวน: 3 คน&#x0A;ต้องการ: เรือ น้ำดื่ม ด่วนมาก!"
+                                className="w-full flex-1 min-h-[300px] p-4 border border-slate-200 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            />
+                            <div className="mt-4 space-y-3">
                                 <Button
                                     variant="primary"
-                                    size="sm"
-                                    onClick={handleBulkImport}
-                                    disabled={importing}
+                                    onClick={handleParseWithAI}
+                                    disabled={!inputText.trim() || parsing}
+                                    className="w-full justify-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md transition-all transform hover:scale-[1.02]"
                                 >
-                                    {importing ? "กำลังนำเข้า..." : `✅ นำเข้า ${parsedData.length} รายการ`}
+                                    {parsing ? (
+                                        <span className="flex items-center gap-2">
+                                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            AI กำลังวิเคราะห์...
+                                        </span>
+                                    ) : "🤖 วิเคราะห์ด้วย AI (แนะนำ)"}
                                 </Button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto">
-                        {parsedData.length === 0 ? (
-                            <p className="col-span-full text-center text-slate-400 py-12">ยังไม่มีข้อมูล - กดปุ่ม "วิเคราะห์ข้อมูล" ด้านบน</p>
-                        ) : (
-                            parsedData.map((item, idx) => (
-                                <div key={idx} className="p-3 bg-slate-50 rounded border border-slate-200">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="font-bold text-sm">#{idx + 1}</span>
-                                        <button
-                                            onClick={() => removeParsedItem(idx)}
-                                            className="text-red-500 text-xs hover:bg-red-50 px-2 py-1 rounded"
-                                        >
-                                            ❌
-                                        </button>
-                                    </div>
-                                    <div className="space-y-2 text-xs">
-                                        <div>
-                                            <label className="font-semibold text-slate-600">ชื่อ:</label>
-                                            <input
-                                                value={item.name}
-                                                onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
-                                                className="w-full px-2 py-1 border rounded mt-1"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="font-semibold text-slate-600">เบอร์:</label>
-                                            <input
-                                                value={item.phone}
-                                                onChange={(e) => updateParsedItem(idx, 'phone', e.target.value)}
-                                                className="w-full px-2 py-1 border rounded mt-1"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="font-semibold text-slate-600">ที่อยู่:</label>
-                                            <input
-                                                value={item.location.address}
-                                                onChange={(e) => updateParsedItem(idx, 'location', { ...item.location, address: e.target.value })}
-                                                className="w-full px-2 py-1 border rounded mt-1"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label className="font-semibold text-slate-600">จำนวนคน:</label>
-                                                <input
-                                                    type="number"
-                                                    value={item.peopleCount}
-                                                    onChange={(e) => updateParsedItem(idx, 'peopleCount', parseInt(e.target.value))}
-                                                    className="w-full px-2 py-1 border rounded mt-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="font-semibold text-slate-600">ความเร่งด่วน:</label>
-                                                <select
-                                                    value={item.priority}
-                                                    onChange={(e) => updateParsedItem(idx, 'priority', e.target.value)}
-                                                    className="w-full px-2 py-1 border rounded mt-1"
-                                                >
-                                                    <option value="Normal">ปกติ</option>
-                                                    <option value="High">ด่วน</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="font-semibold text-slate-600">ความต้องการ:</label>
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {item.needs.map((need, i) => (
-                                                    <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">
-                                                        {need}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleParse}
+                                        disabled={!inputText.trim()}
+                                        className="flex-1 justify-center"
+                                    >
+                                        🔍 วิเคราะห์ปกติ
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setInputText("")}
+                                        className="text-slate-500 hover:text-red-500"
+                                    >
+                                        ล้าง
+                                    </Button>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </Card>
+                                <div className="text-center text-xs text-slate-400">
+                                    พบ {inputText.trim().split(/\n\n+/).filter(x => x.length > 10).length} รายการ
+                                </div>
+                            </div>
+                        </Card>
 
-                {/* Instructions */}
-                <Card>
-                    <h3 className="font-bold mb-3">📖 วิธีใช้งาน</h3>
-                    <ol className="list-decimal list-inside space-y-2 text-sm text-slate-600">
-                        <li>เปิด Facebook group post ที่มี comments</li>
-                        <li>Copy ข้อความ comments ทั้งหมด (หรือเลือกเฉพาะที่ต้องการ)</li>
-                        <li>Paste ลงในช่องด้านซ้าย</li>
-                        <li>กดปุ่ม "วิเคราะห์ข้อมูล"</li>
-                        <li>ตรวจสอบและแก้ไขข้อมูลที่วิเคราะห์ได้</li>
-                        <li>กด "นำเข้า" เพื่อบันทึกเข้าระบบ หรือ "Download CSV" เพื่อบันทึกเป็นไฟล์</li>
-                    </ol>
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                        <strong>💡 เคล็ดลับ:</strong> ระบบจะพยายามดึงข้อมูลดังนี้
-                        <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
-                            <li>ชื่อ: หาคำที่เป็นภาษาไทย 3-30 ตัวอักษร</li>
-                            <li>เบอร์: รูปแบบ 0X-XXXX-XXXX หรือ 081234567</li>
-                            <li>ที่อยู่: หาคำว่า "ที่อยู่", "อยู่", "ซอย", "ถนน"</li>
-                            <li>จำนวนคน: หาตัวเลขที่ตามด้วย "คน"</li>
-                            <li>ความต้องการ: น้ำ, อาหาร, ยา, เรือ, เสื้อผ้า</li>
-                        </ul>
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800">
+                            <h3 className="font-bold mb-2 flex items-center gap-2">💡 เคล็ดลับ</h3>
+                            <ul className="space-y-1 text-xs list-disc list-inside opacity-80">
+                                <li>Copy มาทั้งชื่อและข้อความได้เลย</li>
+                                <li>AI จะพยายามแยกชื่อ ที่อยู่ เบอร์โทร ให้อัตโนมัติ</li>
+                                <li>ควรตรวจสอบความถูกต้องก่อนนำเข้า</li>
+                            </ul>
+                        </div>
                     </div>
-                </Card>
+
+                    {/* Preview Section - 8 Columns */}
+                    <div className="lg:col-span-8">
+                        <Card className="h-full flex flex-col">
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                    2️⃣ ตรวจสอบข้อมูล <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs">{parsedData.length}</span>
+                                </h2>
+                                {parsedData.length > 0 && (
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
+                                            📄 CSV
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={handleBulkImport}
+                                            disabled={importing}
+                                            className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                                        >
+                                            {importing ? "⏳ กำลังบันทึก..." : `✅ ยืนยันนำเข้าทั้งหมด`}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+                                {parsedData.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 py-12">
+                                        <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                        </svg>
+                                        <p>ยังไม่มีข้อมูล</p>
+                                        <p className="text-sm mt-2">วางข้อความด้านซ้าย แล้วกดวิเคราะห์</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {parsedData.map((item, idx) => (
+                                            <div key={idx} className="group relative p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-blue-300">
+                                                <button
+                                                    onClick={() => removeParsedItem(idx)}
+                                                    className="absolute top-2 right-2 text-slate-300 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                                    title="ลบรายการนี้"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <input
+                                                            value={item.name}
+                                                            onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
+                                                            className="flex-1 font-semibold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none px-1"
+                                                            placeholder="ชื่อผู้ร้องขอ"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs text-slate-400 flex items-center gap-1">
+                                                                📞 เบอร์โทร
+                                                            </label>
+                                                            <input
+                                                                value={item.phone}
+                                                                onChange={(e) => updateParsedItem(idx, 'phone', e.target.value)}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs text-slate-400 flex items-center gap-1">
+                                                                👥 จำนวนคน
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                value={item.peopleCount}
+                                                                onChange={(e) => updateParsedItem(idx, 'peopleCount', parseInt(e.target.value))}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs text-slate-400 flex items-center gap-1">
+                                                            📍 ที่อยู่
+                                                        </label>
+                                                        <textarea
+                                                            value={item.location.address}
+                                                            onChange={(e) => updateParsedItem(idx, 'location', { ...item.location, address: e.target.value })}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none text-sm resize-none h-16"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+                                                        <select
+                                                            value={item.priority}
+                                                            onChange={(e) => updateParsedItem(idx, 'priority', e.target.value)}
+                                                            className={`text-xs font-bold px-2 py-1 rounded border outline-none cursor-pointer ${item.priority === 'High'
+                                                                    ? 'bg-red-50 text-red-600 border-red-200'
+                                                                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                                }`}
+                                                        >
+                                                            <option value="Normal">ปกติ</option>
+                                                            <option value="High">🚨 ด่วน</option>
+                                                        </select>
+
+                                                        <div className="flex gap-1">
+                                                            {item.needs.map((need, i) => (
+                                                                <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] border border-blue-100">
+                                                                    {need}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </main>
     );
