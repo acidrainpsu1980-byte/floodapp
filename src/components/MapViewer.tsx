@@ -33,8 +33,10 @@ export default function MapViewer({ requests }: MapViewerProps) {
     // Filter requests that have location data
     const validRequests = requests.filter(r => r.location.lat && r.location.lng);
 
+    console.log("MapViewer rendering with requests:", requests.length);
+
     return (
-        <div style={{ height: '650px', width: '100%', position: 'relative', zIndex: 0 }} className="rounded-lg overflow-hidden border border-[var(--border)] shadow-md bg-slate-100">
+        <div style={{ height: '600px', width: '100%', display: 'block' }} className="rounded-lg overflow-hidden border border-[var(--border)] shadow-md bg-slate-100 relative">
             <MapContainer
                 center={defaultCenter}
                 zoom={13}

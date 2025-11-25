@@ -30,7 +30,7 @@ export default function DashboardPage() {
     const MapViewer = useMemo(() => dynamic(
         () => import('@/components/MapViewer'),
         {
-            loading: () => <div style={{ height: '650px' }} className="w-full bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">กำลังโหลดแผนที่...</div>,
+            loading: () => <div style={{ height: '600px' }} className="w-full bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">กำลังโหลดแผนที่...</div>,
             ssr: false
         }
     ), []);
