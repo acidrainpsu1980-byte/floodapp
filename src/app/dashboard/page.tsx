@@ -22,6 +22,7 @@ const StatCard = ({ title, value, color, icon }: { title: string, value: number 
 
 export default function DashboardPage() {
     const router = useRouter();
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [requests, setRequests] = useState<RequestData[]>([]);
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
     const [loading, setLoading] = useState(true);
@@ -106,6 +107,12 @@ export default function DashboardPage() {
         completed: requests.filter(r => r.status === 'completed').length
     };
 
+    const handleViewOnMap = (id: string) => {
+        setSelectedRequestId(id);
+        setShowMap(true); // Ensure map is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top where map is
+    };
+
     return (
         <main className="min-h-screen bg-slate-50 p-4 md:p-6">
             <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
@@ -167,7 +174,7 @@ export default function DashboardPage() {
                                 {showMap ? 'ซ่อนแผนที่' : 'แสดงแผนที่'}
                             </Button>
                         </div>
-                        {showMap && <MapViewer requests={requests} />}
+                        {showMap && <MapViewer requests={requests} selectedRequestId={selectedRequestId} />}
                     </div>
 
                     {/* Charts & Activity Grid */}
@@ -180,7 +187,7 @@ export default function DashboardPage() {
                             <h2 className="text-lg font-bold text-slate-700 mb-3">📢 ความเคลื่อนไหวล่าสุด</h2>
                             <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                                 {requests.slice(0, 10).map(req => (
-                                    <div key={req.id} className="text-sm border-b border-slate-100 pb-2 last:border-0">
+                                    <div key={req.id} className="text-sm border-b border-slate-100 pb-2 last:border-0 cursor-pointer hover:bg-slate-50 p-1 rounded" onClick={() => handleViewOnMap(req.id)}>
                                         <div className="flex justify-between">
                                             <span className="font-medium text-slate-800 truncate w-2/3">{req.name}</span>
                                             <span className="text-xs text-slate-400 whitespace-nowrap">
@@ -246,7 +253,17 @@ export default function DashboardPage() {
                                         <h3 className="font-bold text-slate-800 truncate">{request.name}</h3>
                                         <div className="text-sm text-slate-600 space-y-1">
                                             <p className="flex items-center gap-2">📞 <a href={`tel:${request.phone}`} className="hover:underline">{request.phone}</a></p>
-                                            <p className="truncate">📍 {request.location.address}</p>
+                                            <div className="flex items-center gap-1">
+                                                <p className="truncate flex-1">📍 {request.location.address}</p>
+                                                {request.location.lat && request.location.lng && (
+                                                    <button
+                                                        onClick={() => handleViewOnMap(request.id)}
+                                                        className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 border border-blue-200 whitespace-nowrap"
+                                                    >
+                                                        🗺️ ดูแผนที่
+                                                    </button>
+                                                )}
+                                            </div>
                                             <p>👥 {request.peopleCount} คน • <span className="text-blue-600">{request.assignedUnit}</span></p>
                                         </div>
 

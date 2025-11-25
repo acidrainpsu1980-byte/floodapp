@@ -1,8 +1,9 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { RequestData } from "@/lib/storage";
+import { useEffect } from "react";
 
 // Helper to get icon based on status/priority
 const getIcon = (status: string, priority: string) => {
@@ -22,11 +23,31 @@ const getIcon = (status: string, priority: string) => {
     });
 };
 
+// Component to handle map interactions
+const MapController = ({ selectedRequestId, requests }: { selectedRequestId?: string | null, requests: RequestData[] }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (selectedRequestId) {
+            const target = requests.find(r => r.id === selectedRequestId);
+            if (target?.location?.lat && target?.location?.lng) {
+                map.flyTo([target.location.lat, target.location.lng], 16, {
+                    animate: true,
+                    duration: 1.5
+                });
+            }
+        }
+    }, [selectedRequestId, requests, map]);
+
+    return null;
+};
+
 interface MapViewerProps {
     requests: RequestData[];
+    selectedRequestId?: string | null;
 }
 
-export default function MapViewer({ requests }: MapViewerProps) {
+export default function MapViewer({ requests, selectedRequestId }: MapViewerProps) {
     // Default to Hat Yai coordinates
     const defaultCenter: [number, number] = [7.0086, 100.4747];
 
@@ -43,6 +64,7 @@ export default function MapViewer({ requests }: MapViewerProps) {
                 scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
+                <MapController selectedRequestId={selectedRequestId} requests={requests} />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
