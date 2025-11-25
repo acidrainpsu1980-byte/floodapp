@@ -9,6 +9,17 @@ import { RequestData } from "@/lib/storage";
 import { convertToCSV } from "@/lib/csv";
 import ReportChart from '@/components/ReportChart';
 
+// Stat Card Component
+const StatCard = ({ title, value, color, icon }: { title: string, value: number | string, color: string, icon: string }) => (
+    <div className={`bg-white p-4 rounded-lg shadow border-l-4 ${color} flex items-center justify-between`}>
+        <div>
+            <p className="text-sm text-gray-500 font-medium">{title}</p>
+            <p className="text-2xl font-bold text-gray-800">{value}</p>
+        </div>
+        <div className="text-3xl opacity-20">{icon}</div>
+    </div>
+);
+
 export default function DashboardPage() {
     const router = useRouter();
     const [requests, setRequests] = useState<RequestData[]>([]);
@@ -19,7 +30,7 @@ export default function DashboardPage() {
     const MapViewer = useMemo(() => dynamic(
         () => import('@/components/MapViewer'),
         {
-            loading: () => <div style={{ height: "400px", width: "100%", backgroundColor: "#f1f5f9", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", marginBottom: "1.5rem" }}>กำลังโหลดแผนที่...</div>,
+            loading: () => <div className="h-[500px] w-full bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">กำลังโหลดแผนที่...</div>,
             ssr: false
         }
     ), []);
@@ -86,194 +97,202 @@ export default function DashboardPage() {
         return true;
     });
 
-    const pendingCount = requests.filter(r => r.status === 'pending').length;
+    // Calculate Stats
+    const stats = {
+        total: requests.length,
+        pending: requests.filter(r => r.status === 'pending').length,
+        critical: requests.filter(r => r.priority === 'High' && r.status !== 'completed').length,
+        people: requests.reduce((sum, r) => sum + r.peopleCount, 0),
+        completed: requests.filter(r => r.status === 'completed').length
+    };
 
     return (
-        <main className="min-h-screen p-4 bg-[var(--background)]">
-            <div className="container mx-auto animate-fade-in">
-                <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[var(--primary)]">แดชบอร์ดกู้ภัย</h1>
-                        <p className="text-[var(--text-secondary)]">
-                            รอการช่วยเหลือ {pendingCount} รายการ
-                        </p>
-                    </div>
+        <main className="min-h-screen bg-slate-50 p-4 md:p-6">
+            <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
 
-                    <div className="flex gap-2 flex-wrap justify-center">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleExport}
-                            className="border-green-600 text-green-600 hover:bg-green-50"
-                        >
+                {/* Header */}
+                <header className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            🚨 War Room กู้ภัยน้ำท่วม
+                            <span className="text-xs font-normal bg-green-100 text-green-700 px-2 py-1 rounded-full border border-green-200">Live Status</span>
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">ศูนย์บัญชาการและติดตามสถานการณ์แบบเรียลไทม์</p>
+                    </div>
+                    <div className="flex gap-2 mt-4 md:mt-0">
+                        <Button variant="outline" size="sm" onClick={handleExport} className="border-green-600 text-green-600 hover:bg-green-50">
                             📥 Export CSV
                         </Button>
-                        {/* Report Chart */}
-                        <ReportChart />
-                        <div className="w-px h-8 bg-slate-300 mx-2 hidden md:block"></div>
-                        <Button
-                            variant={showMap ? 'primary' : 'outline'}
-                            size="sm"
-                            onClick={() => setShowMap(!showMap)}
-                        >
-                            {showMap ? 'ซ่อนแผนที่' : 'แสดงแผนที่'}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleLogout}
-                            className="text-red-600 hover:bg-red-50"
-                        >
+                        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:bg-red-50">
                             ออกจากระบบ
                         </Button>
                     </div>
                 </header>
 
-                <div className="flex justify-end mb-4 gap-2">
-                    <Button
-                        variant={filter === 'all' ? 'primary' : 'ghost'}
-                        size="sm"
-                        onClick={() => setFilter('all')}
-                    >
-                        ทั้งหมด
-                    </Button>
-                    <Button
-                        variant={filter === 'pending' ? 'primary' : 'ghost'}
-                        size="sm"
-                        onClick={() => setFilter('pending')}
-                    >
-                        รอช่วยเหลือ
-                    </Button>
-                    <Button
-                        variant={filter === 'completed' ? 'primary' : 'ghost'}
-                        size="sm"
-                        onClick={() => setFilter('completed')}
-                    >
-                        เสร็จสิ้น
-                    </Button>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                        title="คำขอทั้งหมด"
+                        value={stats.total}
+                        color="border-blue-500"
+                        icon="📋"
+                    />
+                    <StatCard
+                        title="รอการช่วยเหลือ"
+                        value={stats.pending}
+                        color="border-red-500"
+                        icon="🆘"
+                    />
+                    <StatCard
+                        title="เคสวิกฤต/ด่วน"
+                        value={stats.critical}
+                        color="border-orange-500"
+                        icon="⚡"
+                    />
+                    <StatCard
+                        title="ผู้ประสบภัย (คน)"
+                        value={stats.people}
+                        color="border-purple-500"
+                        icon="👥"
+                    />
                 </div>
 
-                {loading ? (
-                    <div className="text-center py-12">กำลังโหลด...</div>
-                ) : (
-                    <>
-                        {showMap && <MapViewer requests={filteredRequests} />}
+                {/* Main Content: Map & Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column: Map (Takes 2/3 space on large screens) */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-bold text-slate-700">📍 แผนที่สถานการณ์</h2>
+                                <Button variant="ghost" size="sm" onClick={() => setShowMap(!showMap)}>
+                                    {showMap ? 'ซ่อนแผนที่' : 'แสดงแผนที่'}
+                                </Button>
+                            </div>
+                            {showMap && <MapViewer requests={requests} />}
+                        </div>
+                    </div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Right Column: Charts & Activity (Takes 1/3 space) */}
+                    <div className="space-y-6">
+                        <ReportChart />
+
+                        {/* Recent Activity Feed */}
+                        <div className="bg-white p-4 rounded-lg shadow border border-slate-200 h-[300px] overflow-hidden flex flex-col">
+                            <h2 className="text-lg font-bold text-slate-700 mb-3">📢 ความเคลื่อนไหวล่าสุด</h2>
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                                {requests.slice(0, 10).map(req => (
+                                    <div key={req.id} className="text-sm border-b border-slate-100 pb-2 last:border-0">
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-slate-800 truncate w-2/3">{req.name}</span>
+                                            <span className="text-xs text-slate-400 whitespace-nowrap">
+                                                {new Date(req.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <span className={`text-xs px-1.5 py-0.5 rounded ${req.status === 'pending' ? 'bg-red-100 text-red-600' :
+                                                    req.status === 'in-progress' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'
+                                                }`}>
+                                                {req.status === 'pending' ? 'รอ' : req.status === 'in-progress' ? 'กำลังทำ' : 'เสร็จ'}
+                                            </span>
+                                            <span className="text-xs text-slate-500 truncate max-w-[100px]">{req.needs[0]}...</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {requests.length === 0 && <p className="text-center text-slate-400 py-4">ยังไม่มีข้อมูล</p>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Detailed List Section */}
+                <div className="bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 className="text-xl font-bold text-slate-800">📋 รายการคำร้องขอ ({filteredRequests.length})</h2>
+                        <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                            {(['all', 'pending', 'completed'] as const).map((f) => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === f
+                                            ? 'bg-white text-blue-600 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    {f === 'all' ? 'ทั้งหมด' : f === 'pending' ? 'รอช่วยเหลือ' : 'เสร็จสิ้น'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <div className="text-center py-12 text-slate-400">กำลังโหลดข้อมูล...</div>
+                    ) : (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredRequests.map(request => (
-                                <Card key={request.id} className="flex flex-col h-full">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <span className={`
-                                            px-2 py-1 rounded text-xs font-bold uppercase
-                                            ${request.status === 'pending' ? 'bg-red-100 text-red-600' :
+                                <Card key={request.id} className="flex flex-col h-full border hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${request.status === 'pending' ? 'bg-red-100 text-red-600' :
                                                 request.status === 'in-progress' ? 'bg-yellow-100 text-yellow-600' :
                                                     'bg-green-100 text-green-600'
-                                            }
-                                        `}>
+                                            }`}>
                                             {request.status === 'pending' ? 'รอช่วยเหลือ' :
                                                 request.status === 'in-progress' ? 'กำลังดำเนินการ' : 'เสร็จสิ้น'}
                                         </span>
-                                        <span className="text-xs text-[var(--text-secondary)]">
-                                            {new Date(request.timestamp).toLocaleTimeString('th-TH')}
-                                        </span>
+                                        {request.priority === 'High' && (
+                                            <span className="text-xs font-bold text-red-600 animate-pulse">⚡ ด่วน</span>
+                                        )}
                                     </div>
 
-                                    <div className="flex-1 space-y-2 mb-6">
-                                        <h3 className="text-lg font-bold">{request.name}</h3>
-
-                                        {/* Unit & Priority Badges */}
-                                        <div className="flex gap-2 mb-2">
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium border ${request.priority === 'High'
-                                                ? 'bg-red-50 text-red-600 border-red-200'
-                                                : 'bg-slate-50 text-slate-600 border-slate-200'
-                                                }`}>
-                                                ความสำคัญ: {request.priority === 'High' ? 'สูง' : 'ปกติ'}
-                                            </span>
-                                            <span className="px-2 py-0.5 rounded text-xs font-medium border bg-blue-50 text-blue-600 border-blue-200">
-                                                ทีม: {
-                                                    request.assignedUnit === 'Medical' ? 'ทีมแพทย์' :
-                                                        request.assignedUnit === 'Water Rescue' ? 'กู้ชีพทางน้ำ' :
-                                                            request.assignedUnit === 'Supply' ? 'ทีมเสบียง' : 'ทีมทั่วไป'
-                                                }
-                                            </span>
+                                    <div className="flex-1 space-y-2 mb-4">
+                                        <h3 className="font-bold text-slate-800 truncate">{request.name}</h3>
+                                        <div className="text-sm text-slate-600 space-y-1">
+                                            <p className="flex items-center gap-2">📞 <a href={`tel:${request.phone}`} className="hover:underline">{request.phone}</a></p>
+                                            <p className="truncate">📍 {request.location.address}</p>
+                                            <p>👥 {request.peopleCount} คน • <span className="text-blue-600">{request.assignedUnit}</span></p>
                                         </div>
-
-                                        <p className="text-sm">📞 <a href={`tel:${request.phone}`} className="hover:underline">{request.phone}</a></p>
-                                        <p className="text-sm">📍 {request.location.address}</p>
-                                        <p className="text-sm">👥 {request.peopleCount} คน</p>
-
-                                        {request.location.lat && request.location.lng && (
-                                            <a
-                                                href={`https://www.openstreetmap.org/?mlat=${request.location.lat}&mlon=${request.location.lng}#map=16/${request.location.lat}/${request.location.lng}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs text-blue-600 hover:underline block mt-1"
-                                            >
-                                                ดูแผนที่ (OpenStreetMap) ↗
-                                            </a>
-                                        )}
 
                                         <div className="flex flex-wrap gap-1 mt-2">
                                             {request.needs.map(need => (
-                                                <span key={need} className="text-xs bg-slate-100 px-2 py-1 rounded">
+                                                <span key={need} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
                                                     {need}
                                                 </span>
                                             ))}
                                         </div>
+
+                                        {request.note && (
+                                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800 border border-yellow-100">
+                                                📝 {request.note}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Note display */}
-                                    {request.note && (
-                                        <p className="text-sm text-[var(--text-secondary)] mt-2">
-                                            📋 หมายเหตุ: {request.note}
-                                        </p>
-                                    )}
-
-                                    <div className="flex gap-2 mt-auto pt-4 border-t border-[var(--border)]">
+                                    <div className="pt-3 border-t border-slate-100 mt-auto flex gap-2">
                                         {request.status === 'pending' && (
-                                            <Button
-                                                variant="primary"
-                                                size="sm"
-                                                fullWidth
-                                                onClick={() => updateStatus(request.id, 'in-progress')}
-                                            >
-                                                รับเรื่อง
+                                            <Button variant="primary" size="sm" fullWidth onClick={() => updateStatus(request.id, 'in-progress')}>
+                                                รับงาน
                                             </Button>
                                         )}
                                         {request.status === 'in-progress' && (
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                fullWidth
-                                                onClick={() => updateStatus(request.id, 'completed')}
-                                            >
-                                                เสร็จสิ้นภารกิจ
+                                            <Button variant="secondary" size="sm" fullWidth onClick={() => updateStatus(request.id, 'completed')}>
+                                                ปิดงาน
                                             </Button>
                                         )}
                                         {request.status === 'completed' && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                fullWidth
-                                                disabled
-                                            >
-                                                เรียบร้อย
-                                            </Button>
+                                            <span className="text-center w-full text-xs text-green-600 font-medium py-1">
+                                                ✓ เรียบร้อยแล้ว
+                                            </span>
                                         )}
                                     </div>
                                 </Card>
                             ))}
-
-                            {
-                                filteredRequests.length === 0 && (
-                                    <div className="col-span-full text-center py-12 text-[var(--text-secondary)]">
-                                        ไม่พบรายการคำร้องขอ
-                                    </div>
-                                )
-                            }
+                            {filteredRequests.length === 0 && (
+                                <div className="col-span-full text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                                    ไม่พบรายการคำร้องขอ
+                                </div>
+                            )}
                         </div>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
         </main>
     );

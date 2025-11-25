@@ -4,14 +4,23 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { RequestData } from "@/lib/storage";
 
-// Fix for default marker icon
-const icon = L.icon({
-    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-});
+// Helper to get icon based on status/priority
+const getIcon = (status: string, priority: string) => {
+    let color = 'blue';
+    if (status === 'completed') color = 'green';
+    else if (status === 'in-progress') color = 'gold';
+    else if (priority === 'High') color = 'red'; // Pending + High Priority
+    else if (status === 'pending') color = 'orange'; // Pending + Normal
+
+    return L.icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+};
 
 interface MapViewerProps {
     requests: RequestData[];
@@ -25,11 +34,11 @@ export default function MapViewer({ requests }: MapViewerProps) {
     const validRequests = requests.filter(r => r.location.lat && r.location.lng);
 
     return (
-        <div style={{ height: "400px", width: "100%", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)", marginBottom: "1.5rem", zIndex: 0 }}>
+        <div className="h-[500px] w-full rounded-lg overflow-hidden border border-[var(--border)] shadow-md z-0 relative">
             <MapContainer
                 center={defaultCenter}
-                zoom={12}
-                scrollWheelZoom={false}
+                zoom={13}
+                scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
                 <TileLayer
@@ -40,24 +49,48 @@ export default function MapViewer({ requests }: MapViewerProps) {
                     <Marker
                         key={request.id}
                         position={[request.location.lat!, request.location.lng!]}
-                        icon={icon}
+                        icon={getIcon(request.status, request.priority)}
                     >
                         <Popup>
-                            <div className="text-sm">
-                                <strong>{request.name}</strong><br />
-                                {request.phone}<br />
-                                {request.needs.join(", ")}<br />
-                                <span className={`font-bold ${request.status === 'pending' ? 'text-red-600' :
-                                    request.status === 'in-progress' ? 'text-yellow-600' : 'text-green-600'
-                                    }`}>
-                                    {request.status === 'pending' ? 'รอช่วยเหลือ' :
-                                        request.status === 'in-progress' ? 'กำลังดำเนินการ' : 'เสร็จสิ้น'}
-                                </span>
+                            <div className="p-1">
+                                <strong className="text-base block mb-1">{request.name}</strong>
+                                <div className="text-sm text-gray-600 mb-2">
+                                    <p>📞 {request.phone}</p>
+                                    <p>👥 {request.peopleCount} คน</p>
+                                    <p>🚑 {request.needs.join(", ")}</p>
+                                </div>
+                                <div className="flex gap-2 items-center">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold text-white ${request.status === 'pending' ? 'bg-red-500' :
+                                            request.status === 'in-progress' ? 'bg-yellow-500' : 'bg-green-500'
+                                        }`}>
+                                        {request.status === 'pending' ? 'รอช่วยเหลือ' :
+                                            request.status === 'in-progress' ? 'กำลังดำเนินการ' : 'เสร็จสิ้น'}
+                                    </span>
+                                    {request.priority === 'High' && (
+                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white">
+                                            ด่วน
+                                        </span>
+                                    )}
+                                </div>
+                                {request.note && (
+                                    <p className="mt-2 text-xs text-gray-500 border-t pt-1">
+                                        📝 {request.note}
+                                    </p>
+                                )}
                             </div>
                         </Popup>
                     </Marker>
                 ))}
             </MapContainer>
+
+            {/* Legend Overlay */}
+            <div className="absolute bottom-4 left-4 bg-white p-2 rounded shadow-lg text-xs z-[1000] opacity-90">
+                <div className="font-bold mb-1">สัญลักษณ์</div>
+                <div className="flex items-center gap-1 mb-1"><span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span> ด่วน / รอช่วยเหลือ</div>
+                <div className="flex items-center gap-1 mb-1"><span className="w-3 h-3 rounded-full bg-orange-400 inline-block"></span> รอช่วยเหลือ (ปกติ)</div>
+                <div className="flex items-center gap-1 mb-1"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> กำลังดำเนินการ</div>
+                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> เสร็จสิ้น</div>
+            </div>
         </div>
     );
 }
