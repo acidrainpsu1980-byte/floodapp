@@ -140,10 +140,38 @@ export default function ImportPage() {
     const [inputText, setInputText] = useState("");
     const [parsedData, setParsedData] = useState<ParsedRequest[]>([]);
     const [importing, setImporting] = useState(false);
+    const [parsing, setParsing] = useState(false);
 
     const handleParse = () => {
         const parsed = parseComments(inputText);
         setParsedData(parsed);
+    };
+
+    const handleParseWithAI = async () => {
+        if (!inputText.trim()) return;
+
+        setParsing(true);
+        try {
+            const response = await fetch("/api/parse-ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: inputText })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                setParsedData(result.data);
+                alert(`✅ AI วิเคราะห์สำเร็จ ${result.count} รายการ`);
+            } else {
+                const error = await response.json();
+                alert(`❌ AI วิเคราะห์ไม่สำเร็จ: ${error.error}\nกรุณาลองใช้วิธีปกติ`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("เกิดข้อผิดพลาดในการเชื่อมต่อ AI - กรุณาลองใช้วิธีปกติ");
+        } finally {
+            setParsing(false);
+        }
     };
 
     const handleBulkImport = async () => {
@@ -220,13 +248,21 @@ export default function ImportPage() {
                         placeholder="วาง comments จาก Facebook ที่นี่...&#x0A;&#x0A;ตัวอย่าง:&#x0A;ชื่อ: สมชาย ใจดี&#x0A;เบอร์: 081-234-5678&#x0A;ที่อยู่: 123 ซอยลาดพร้าว อำเภอหาดใหญ่&#x0A;จำนวน: 5 คน&#x0A;ต้องการ: น้ำดื่ม อาหาร ด่วน!&#x0A;&#x0A;---&#x0A;&#x0A;ชื่อ: สมหญิง รักสงบ&#x0A;เบอร์: 062-987-6543&#x0A;ที่อยู่: 456 ถนนนิพัทธ์อุทิศ 3 ตำบลคูเต่า&#x0A;จำนวน: 3 คน&#x0A;ต้องการ: เรือ น้ำดื่ม ด่วนมาก!"
                         className="w-full h-96 p-4 border rounded-lg font-mono text-sm resize-y"
                     />
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 flex gap-2 flex-wrap">
                         <Button
                             variant="primary"
+                            onClick={handleParseWithAI}
+                            disabled={!inputText.trim() || parsing}
+                            className="bg-purple-600 hover:bg-purple-700"
+                        >
+                            {parsing ? "🤖 AI กำลังวิเคราะห์..." : "🤖 วิเคราะห์ด้วย AI (ฟรี)"}
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={handleParse}
                             disabled={!inputText.trim()}
                         >
-                            🔍 วิเคราะห์ข้อมูล ({inputText.trim().split(/\n\n+/).length} comments)
+                            🔍 วิเคราะห์แบบปกติ
                         </Button>
                         <Button
                             variant="ghost"
@@ -234,6 +270,10 @@ export default function ImportPage() {
                         >
                             ล้างข้อมูล
                         </Button>
+                        <div className="flex-1"></div>
+                        <span className="text-xs text-slate-500 self-center">
+                            {inputText.trim().split(/\n\n+/).filter(x => x.length > 10).length} comments
+                        </span>
                     </div>
                 </Card>
 

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^4.8.0",
+    "@google/generative-ai": "^0.24.1",
     "@types/leaflet": "^1.9.21",
     "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",
