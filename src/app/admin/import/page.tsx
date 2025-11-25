@@ -42,15 +42,59 @@ const parseComments = (text: string): ParsedRequest[] => {
             parsed.name = nameMatch[1].trim();
         }
 
-        // Extract address (look for location keywords)
-        const addressMatch = comment.match(/(?:ที่อยู่|อยู่|บ้าน)[:\s]+([^\n]+)/i);
-        if (addressMatch) {
-            parsed.location = { address: addressMatch[1].trim() };
-        } else {
-            // Try to find address-like text (mention of soi, street, etc)
-            const addrMatch = comment.match(/(?:ซอย|ถนน|ตำบล|อำเภอ|จังหวัด)[^\n]+/);
-            if (addrMatch) {
-                parsed.location = { address: addrMatch[0].trim() };
+        // Extract address (look for location keywords) - More comprehensive patterns
+        let addressText = "";
+
+        // Pattern 1: Explicit "ที่อยู่:" label
+        const addressLabelMatch = comment.match(/(?:ที่อยู่|ที่อยุ่|อยู่|บ้าน|สถานที่)[:\s]+([^\n]+(?:\n(?!ชื่อ|เบอร์|จำนวน|ต้องการ)[^\n]+)*)/i);
+        if (addressLabelMatch) {
+            addressText = addressLabelMatch[1].trim();
+        }
+        // Pattern 2: Look for house number pattern (เลขที่ XXX, บ้านเลขที่ XXX)
+        else {
+            const houseNumMatch = comment.match(/(?:เลขที่|บ้านเลขที่|เลข)\s*[\d\/\-]+[^\n]*/i);
+            if (houseNumMatch) {
+                // Try to capture multiple lines if they contain address keywords
+                let startIdx = comment.indexOf(houseNumMatch[0]);
+                let endIdx = startIdx + houseNumMatch[0].length;
+
+                // Look ahead for address-related content
+                const remaining = comment.substring(endIdx);
+                const nextLines = remaining.match(/(?:\n[^\n]*(?:ม\.|หมู่|ซอย|ถนน|ต\.|ตำบล|แขวง|อ\.|อำเภอ|เขต|จ\.|จังหวัด)[^\n]*){0,3}/);
+                if (nextLines) {
+                    addressText = (houseNumMatch[0] + nextLines[0]).trim();
+                } else {
+                    addressText = houseNumMatch[0].trim();
+                }
+            }
+            // Pattern 3: Find patterns with location keywords (ซอย, ถนน, ม., ต., etc)
+            else {
+                const locationMatch = comment.match(/(?:ม\.\s*\d+|หมู่\s*\d+|ซอย[^\s,\n]+|ถนน[^\s,\n]+)[^\n]*(?:\n(?:ต\.|ตำบล|แขวง|อ\.|อำเภอ|เขต|จ\.|จังหวัด)[^\n]+)*/i);
+                if (locationMatch) {
+                    addressText = locationMatch[0].trim();
+                }
+            }
+        }
+
+        // Clean up the address
+        if (addressText) {
+            // Remove common noise
+            addressText = addressText
+                .replace(/กรุณา|ช่วยด้วย|ด่วน/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            // If address is too short and doesn't look like an address, skip it
+            if (addressText.length > 10) {
+                parsed.location = { address: addressText };
+            }
+        }
+
+        // Fallback: If still no address, try to find any text with common location keywords
+        if (!parsed.location) {
+            const fallbackMatch = comment.match(/((?:ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|เขต|แขวง)[^\n]{10,80})/i);
+            if (fallbackMatch) {
+                parsed.location = { address: fallbackMatch[1].trim() };
             }
         }
 
@@ -167,96 +211,96 @@ export default function ImportPage() {
                     <p className="text-slate-500 text-sm mt-1">Copy comments จาก Facebook แล้ววางลงในช่องด้านล่าง</p>
                 </header>
 
-                <div className="grid lg:grid-cols-2 gap-6">
-                    {/* Input Section */}
-                    <Card>
-                        <h2 className="text-lg font-bold mb-3">1️⃣ วาง Comments ที่นี่</h2>
-                        <textarea
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            placeholder="วาง comments จาก Facebook ที่นี่...&#x0A;&#x0A;ตัวอย่าง:&#x0A;ชื่อ: สมชาย ใจดี&#x0A;เบอร์: 081-234-5678&#x0A;ที่อยู่: 123 ซอยลาดพร้าว อำเภอหาดใหญ่&#x0A;จำนวน: 5 คน&#x0A;ต้องการ: น้ำดื่ม อาหาร ด่วน!"
-                            className="w-full h-80 p-3 border rounded-lg font-mono text-sm resize-none"
-                        />
-                        <div className="mt-4 flex gap-2">
-                            <Button
-                                variant="primary"
-                                onClick={handleParse}
-                                disabled={!inputText.trim()}
-                            >
-                                🔍 วิเคราะห์ข้อมูล
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                onClick={() => setInputText("")}
-                            >
-                                ล้างข้อมูล
-                            </Button>
-                        </div>
-                    </Card>
+                {/* Input Section - Full Width */}
+                <Card>
+                    <h2 className="text-lg font-bold mb-3">1️⃣ วาง Comments จาก Facebook ที่นี่</h2>
+                    <textarea
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        placeholder="วาง comments จาก Facebook ที่นี่...&#x0A;&#x0A;ตัวอย่าง:&#x0A;ชื่อ: สมชาย ใจดี&#x0A;เบอร์: 081-234-5678&#x0A;ที่อยู่: 123 ซอยลาดพร้าว อำเภอหาดใหญ่&#x0A;จำนวน: 5 คน&#x0A;ต้องการ: น้ำดื่ม อาหาร ด่วน!&#x0A;&#x0A;---&#x0A;&#x0A;ชื่อ: สมหญิง รักสงบ&#x0A;เบอร์: 062-987-6543&#x0A;ที่อยู่: 456 ถนนนิพัทธ์อุทิศ 3 ตำบลคูเต่า&#x0A;จำนวน: 3 คน&#x0A;ต้องการ: เรือ น้ำดื่ม ด่วนมาก!"
+                        className="w-full h-96 p-4 border rounded-lg font-mono text-sm resize-y"
+                    />
+                    <div className="mt-4 flex gap-2">
+                        <Button
+                            variant="primary"
+                            onClick={handleParse}
+                            disabled={!inputText.trim()}
+                        >
+                            🔍 วิเคราะห์ข้อมูล ({inputText.trim().split(/\n\n+/).length} comments)
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setInputText("")}
+                        >
+                            ล้างข้อมูล
+                        </Button>
+                    </div>
+                </Card>
 
-                    {/* Preview Section */}
-                    <Card>
-                        <div className="flex justify-between items-center mb-3">
-                            <h2 className="text-lg font-bold">2️⃣ ข้อมูลที่วิเคราะห์ได้ ({parsedData.length})</h2>
-                            {parsedData.length > 0 && (
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
-                                        📄 Download CSV
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={handleBulkImport}
-                                        disabled={importing}
-                                    >
-                                        {importing ? "กำลังนำเข้า..." : `✅ นำเข้า ${parsedData.length} รายการ`}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
+                {/* Preview Section - Full Width */}
+                <Card>
+                    <div className="flex justify-between items-center mb-3">
+                        <h2 className="text-lg font-bold">2️⃣ ข้อมูลที่วิเคราะห์ได้ ({parsedData.length} รายการ)</h2>
+                        {parsedData.length > 0 && (
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
+                                    📄 Download CSV
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={handleBulkImport}
+                                    disabled={importing}
+                                >
+                                    {importing ? "กำลังนำเข้า..." : `✅ นำเข้า ${parsedData.length} รายการ`}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
 
-                        <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                            {parsedData.length === 0 ? (
-                                <p className="text-center text-slate-400 py-8">ยังไม่มีข้อมูล - กดปุ่ม "วิเคราะห์ข้อมูล" ด้านซ้าย</p>
-                            ) : (
-                                parsedData.map((item, idx) => (
-                                    <div key={idx} className="p-3 bg-slate-50 rounded border border-slate-200">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="font-bold text-sm">#{idx + 1}</span>
-                                            <button
-                                                onClick={() => removeParsedItem(idx)}
-                                                className="text-red-500 text-xs hover:bg-red-50 px-2 py-1 rounded"
-                                            >
-                                                ❌ ลบ
-                                            </button>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto">
+                        {parsedData.length === 0 ? (
+                            <p className="col-span-full text-center text-slate-400 py-12">ยังไม่มีข้อมูล - กดปุ่ม "วิเคราะห์ข้อมูล" ด้านบน</p>
+                        ) : (
+                            parsedData.map((item, idx) => (
+                                <div key={idx} className="p-3 bg-slate-50 rounded border border-slate-200">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="font-bold text-sm">#{idx + 1}</span>
+                                        <button
+                                            onClick={() => removeParsedItem(idx)}
+                                            className="text-red-500 text-xs hover:bg-red-50 px-2 py-1 rounded"
+                                        >
+                                            ❌
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2 text-xs">
+                                        <div>
+                                            <label className="font-semibold text-slate-600">ชื่อ:</label>
+                                            <input
+                                                value={item.name}
+                                                onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
+                                                className="w-full px-2 py-1 border rounded mt-1"
+                                            />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <label className="font-semibold text-slate-600">เบอร์:</label>
+                                            <input
+                                                value={item.phone}
+                                                onChange={(e) => updateParsedItem(idx, 'phone', e.target.value)}
+                                                className="w-full px-2 py-1 border rounded mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="font-semibold text-slate-600">ที่อยู่:</label>
+                                            <input
+                                                value={item.location.address}
+                                                onChange={(e) => updateParsedItem(idx, 'location', { ...item.location, address: e.target.value })}
+                                                className="w-full px-2 py-1 border rounded mt-1"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label className="font-semibold">ชื่อ:</label>
-                                                <input
-                                                    value={item.name}
-                                                    onChange={(e) => updateParsedItem(idx, 'name', e.target.value)}
-                                                    className="w-full px-2 py-1 border rounded mt-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="font-semibold">เบอร์:</label>
-                                                <input
-                                                    value={item.phone}
-                                                    onChange={(e) => updateParsedItem(idx, 'phone', e.target.value)}
-                                                    className="w-full px-2 py-1 border rounded mt-1"
-                                                />
-                                            </div>
-                                            <div className="col-span-2">
-                                                <label className="font-semibold">ที่อยู่:</label>
-                                                <input
-                                                    value={item.location.address}
-                                                    onChange={(e) => updateParsedItem(idx, 'location', { ...item.location, address: e.target.value })}
-                                                    className="w-full px-2 py-1 border rounded mt-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="font-semibold">จำนวนคน:</label>
+                                                <label className="font-semibold text-slate-600">จำนวนคน:</label>
                                                 <input
                                                     type="number"
                                                     value={item.peopleCount}
@@ -265,7 +309,7 @@ export default function ImportPage() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="font-semibold">ความเร่งด่วน:</label>
+                                                <label className="font-semibold text-slate-600">ความเร่งด่วน:</label>
                                                 <select
                                                     value={item.priority}
                                                     onChange={(e) => updateParsedItem(idx, 'priority', e.target.value)}
@@ -275,23 +319,23 @@ export default function ImportPage() {
                                                     <option value="High">ด่วน</option>
                                                 </select>
                                             </div>
-                                            <div className="col-span-2">
-                                                <label className="font-semibold">ความต้องการ:</label>
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {item.needs.map((need, i) => (
-                                                        <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                                                            {need}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                        </div>
+                                        <div>
+                                            <label className="font-semibold text-slate-600">ความต้องการ:</label>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {item.needs.map((need, i) => (
+                                                    <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px]">
+                                                        {need}
+                                                    </span>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </Card>
-                </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </Card>
 
                 {/* Instructions */}
                 <Card>
