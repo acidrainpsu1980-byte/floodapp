@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Use gemini-pro which is widely available and stable
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         const prompt = `คุณเป็น AI ผู้ช่วยในการแยกข้อมูลผู้ประสบภัยน้ำท่วมจาก Facebook comments
 
