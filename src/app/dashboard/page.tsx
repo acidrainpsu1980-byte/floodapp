@@ -41,10 +41,16 @@ export default function DashboardPage() {
             const res = await fetch("/api/requests");
             if (res.ok) {
                 const data = await res.json();
-                setRequests(data);
+                if (Array.isArray(data)) {
+                    setRequests(data);
+                } else {
+                    console.error("Requests data is not an array:", data);
+                    setRequests([]);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch requests", error);
+            setRequests([]);
         } finally {
             setLoading(false);
         }
@@ -91,7 +97,7 @@ export default function DashboardPage() {
         router.push("/login");
     };
 
-    const filteredRequests = requests.filter(r => {
+    const filteredRequests = (Array.isArray(requests) ? requests : []).filter(r => {
         if (filter === 'all') return true;
         if (filter === 'pending') return r.status === 'pending';
         if (filter === 'completed') return r.status === 'completed';
@@ -103,7 +109,7 @@ export default function DashboardPage() {
         total: requests.length,
         pending: requests.filter(r => r.status === 'pending').length,
         critical: requests.filter(r => r.priority === 'High' && r.status !== 'completed').length,
-        people: requests.reduce((sum, r) => sum + r.peopleCount, 0),
+        people: requests.reduce((sum, r) => sum + (Number(r.peopleCount) || 0), 0),
         completed: requests.filter(r => r.status === 'completed').length
     };
 
@@ -283,7 +289,7 @@ export default function DashboardPage() {
                                         </div>
 
                                         <div className="flex flex-wrap gap-1 mt-2">
-                                            {request.needs.map(need => (
+                                            {(request.needs && Array.isArray(request.needs)) && request.needs.map(need => (
                                                 <span key={need} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
                                                     {need}
                                                 </span>
