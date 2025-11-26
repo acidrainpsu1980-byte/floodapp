@@ -11,11 +11,12 @@ export async function POST(request: NextRequest) {
 
         const container = await getEvacueesContainer();
 
-        // Ensure container exists (optional safety check, though usually done at startup)
-        // await container.database.containers.createIfNotExists({ id: "Evacuees", partitionKey: "/district" });
+        // Ensure container exists
+        await container.database.containers.createIfNotExists({ id: "Evacuees", partitionKey: "/district" });
 
         let successCount = 0;
         let errorCount = 0;
+        let firstError = null;
 
         // Process in batches to avoid timeouts
         const batchSize = 50;
@@ -31,8 +32,9 @@ export async function POST(request: NextRequest) {
 
                     await container.items.create(evacuee);
                     successCount++;
-                } catch (err) {
+                } catch (err: any) {
                     console.error("Error importing item:", err);
+                    if (!firstError) firstError = err.message || err;
                     errorCount++;
                 }
             }));
@@ -41,7 +43,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             message: "Import completed",
             successCount,
-            errorCount
+            errorCount,
+            firstError
         });
 
     } catch (error: any) {
