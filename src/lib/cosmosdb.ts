@@ -32,7 +32,7 @@ export async function getAllRequests(): Promise<RequestData[]> {
     await initCosmosDB();
 
     const querySpec = {
-        query: "SELECT * FROM c WHERE c.type != 'evacuee' AND c.type != 'news' ORDER BY c.timestamp DESC"
+        query: "SELECT * FROM c WHERE (NOT IS_DEFINED(c.type) OR (c.type != 'evacuee' AND c.type != 'news')) ORDER BY c.timestamp DESC"
     };
 
     const { resources } = await container.items.query(querySpec).fetchAll();
