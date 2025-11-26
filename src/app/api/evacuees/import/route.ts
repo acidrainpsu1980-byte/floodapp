@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
 
         const container = await getEvacueesContainer();
 
-        // Ensure container exists
-        await container.database.containers.createIfNotExists({ id: "Evacuees", partitionKey: "/district" });
+        // Container already exists (reusing tsRequests)
+        // await container.database.containers.createIfNotExists({ id: "Evacuees", partitionKey: "/district" });
 
         let successCount = 0;
         let errorCount = 0;
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
                         evacuee.id = `evac-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     }
                     evacuee.importedAt = new Date().toISOString();
+                    evacuee.type = 'evacuee'; // Distinguish from requests
 
                     await container.items.create(evacuee);
                     successCount++;

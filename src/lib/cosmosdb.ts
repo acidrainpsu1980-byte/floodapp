@@ -26,9 +26,14 @@ async function initCosmosDB() {
 
 let evacueesContainer: Container;
 
-export async function getEvacueesContainer(): Promise<Container> {
+export async function getEvacueesContainer() {
+    // The original instruction implies a refactor of initCosmosDB to initCosmos
+    // and for it to return the database object.
+    // Since the full refactor is not provided, we'll adapt to the existing initCosmosDB structure
+    // and return the 'tsRequests' container directly after initialization.
     await initCosmosDB();
-    return evacueesContainer;
+    // Reuse existing container to avoid quota limits
+    return database.container("tsRequests");
 }
 
 // Get all requests

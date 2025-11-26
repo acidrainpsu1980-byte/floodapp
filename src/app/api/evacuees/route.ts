@@ -5,10 +5,11 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const query = searchParams.get('q') || '';
+        const limit = 50; // Define limit as it's used in the querySpec
 
         const container = await getEvacueesContainer();
 
-        let sqlQuery = 'SELECT * FROM c WHERE c.status != "deleted"';
+        let sqlQuery = 'SELECT * FROM c WHERE c.status != "deleted" AND c.type = "evacuee"';
         const parameters = [];
 
         if (query) {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Limit results to avoid overload
-        sqlQuery += ' OFFSET 0 LIMIT 50';
+        sqlQuery += ` OFFSET 0 LIMIT ${limit}`;
 
         const { resources } = await container.items.query({
             query: sqlQuery,
