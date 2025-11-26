@@ -2,10 +2,12 @@ import Link from "next/link";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 
+import EvacueeStats from "@/components/EvacueeStats";
+
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-[var(--background)] to-blue-50">
-      <div className="container max-w-2xl animate-fade-in">
+      <div className="container max-w-4xl animate-fade-in">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-[var(--primary)] mb-4">
             ระบบช่วยเหลือผู้ประสบภัยน้ำท่วมหาดใหญ่
@@ -15,7 +17,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer border-t-4 border-t-[var(--secondary)]">
             <div className="flex flex-col items-center text-center h-full justify-between gap-6">
               <div>
@@ -49,7 +51,7 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-8">
           <Link href="/evacuees" className="block group">
             <div className="bg-white border-2 border-blue-500 rounded-2xl p-8 shadow-xl hover:shadow-2xl hover:bg-blue-50 transition-all transform hover:-translate-y-1 cursor-pointer relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
@@ -72,6 +74,9 @@ export default function Home() {
             </div>
           </Link>
         </div>
+
+        {/* Evacuee Statistics Section */}
+        <EvacueeStats />
 
         <footer className="mt-16 text-center text-[var(--text-secondary)] text-sm">
           <p>© 2025 ระบบช่วยเหลือผู้ประสบภัยน้ำท่วมหาดใหญ่. ด้วยความห่วงใย.</p>
