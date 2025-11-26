@@ -40,6 +40,19 @@ export default function Home() {
               </div>
             </div>
           </Link>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-slate-600">
+              หากค้นหาทางนี้ไม่พบข้อมูล สามารถค้นหาเพิ่มเติมได้จาก{' '}
+              <a
+                href="https://hakon.psu.ac.th/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 underline font-medium"
+              >
+                hakon.psu.ac.th
+              </a>
+            </p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-12">
