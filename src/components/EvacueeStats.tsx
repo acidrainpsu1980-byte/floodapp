@@ -63,18 +63,29 @@ export default function EvacueeStats() {
         ],
     };
 
+    // Process Shelter Data: Sort by count descending and filter empty
+    const sortedShelters = (stats.byShelter || [])
+        .filter((s: any) => s.shelter && s.shelter !== 'ยังไม่อพยพ') // Filter out "Not yet evacuated" if it dominates, or keep it. Let's keep it but sort.
+        // Actually, let's filter out empty strings.
+        .sort((a: any, b: any) => b.count - a.count);
+
     const shelterData = {
-        labels: stats.byShelter?.map((s: any) => s.shelter || 'ไม่ระบุ') || [],
+        labels: sortedShelters.map((s: any) => s.shelter),
         datasets: [
             {
                 label: 'จำนวนผู้อพยพ (คน)',
-                data: stats.byShelter?.map((s: any) => s.count) || [],
-                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                data: sortedShelters.map((s: any) => s.count),
+                backgroundColor: 'rgba(153, 102, 255, 0.7)',
                 borderColor: 'rgba(153, 102, 255, 1)',
                 borderWidth: 1,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
             },
         ],
     };
+
+    // Calculate dynamic height based on number of shelters (min 300px, add 30px per item)
+    const shelterChartHeight = Math.max(300, sortedShelters.length * 40);
 
     return (
         <div className="mt-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
@@ -113,9 +124,9 @@ export default function EvacueeStats() {
                 </div>
 
                 {/* Shelter Chart (Full Width Row) */}
-                <div className="h-80 flex flex-col items-center justify-center w-full md:col-span-4 border-t border-slate-100 pt-6">
-                    <h3 className="text-lg font-bold text-slate-700 mb-4">📍 จำแนกตามศูนย์พักพิง</h3>
-                    <div className="w-full h-full">
+                <div className="flex flex-col items-center justify-center w-full md:col-span-4 border-t border-slate-100 pt-6">
+                    <h3 className="text-lg font-bold text-slate-700 mb-4">📍 จำแนกตามศูนย์พักพิง (เรียงตามจำนวน)</h3>
+                    <div className="w-full" style={{ height: `${shelterChartHeight}px` }}>
                         <Bar
                             data={shelterData}
                             options={{
